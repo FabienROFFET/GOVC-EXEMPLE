@@ -1,0 +1,56 @@
+Reminder - Mix of Bash and govc : Patch a list of servers 
+
+************************************
+export GOVC_USERNAME='username'
+export GOVC_PASSWORD='password'
+export GOVC_INSECURE=1
+export GOVC_URL=fqdn_vcenter
+export DESCRIPTION='Some text'
+export SNAPSHOTNAME='Some text'
+************************************
+govc find /dtc.int/vm/Customers/lnx_lst > lnx_lst.output
+************************************
+cat << EOF | while read hn; do  grep -i $hn lnx_lst.output; done
+serveur_1
+serveur_2
+serveur_3
+EOF
+************************************
+
+Check some VM info  :
+*********************
+for vm in $(cat lnx_lst.output ); do echo == $vm; govc vm.info $vm; done
+
+Power / SnapShot / Restart :
+****************************
+for vm in $(cat lnx_lst.output); do echo == $vm; govc vm.power -off $vm; done
+for hn in $(cat lnx_lst.output); do echo == Snapshot de $hn; govc snapshot.create -m=false -d="$DESCRIPTION" -vm $hn $SNAPSHOTNAME; done
+for hn in $(cat lnx_lst.output); do echo == Restart de $hn; govc vm.power -on $hn; done
+
+****************************
+An Other Classic Bash loop
+****************************
+vi /root/Somelist.lst : 
+
+srv1
+srv2
+srv3
+
+Quick Validation :
+for hn in `cat /root/my.list.prod_OwnCloud.BigProd.list`; do echo "== $hn"; ssh -q $hn 'date'; done
+
+Update :
+for hn in `cat /root/my.list.prod_OwnCloud.BigProd.list`; do echo "== $hn"; ssh -q $hn 'yum update --security -y ; sleep 20 ; reboot' & ; done
+
+Or 
+ssh -q srv1 'yum update --security -y ; sleep 20 ; reboot' &
+ssh -q srv2 'yum update --security -y ; sleep 20 ; reboot' &
+ssh -q srv3 'yum update --security -y ; sleep 20 ; reboot' &
+
+for hn in `cat /root/my.list.prod_OwnCloud.BigProd.list`; do echo "== $hn"; ssh -q $hn 'uptime' ; & ; done
+
+
+
+
+
+
